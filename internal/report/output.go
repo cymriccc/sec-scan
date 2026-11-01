@@ -3,19 +3,28 @@ package report
 import (
 	"encoding/json"
 	"os"
+	"time"
 
 	"github.com/cymriccc/sec-scan/internal/scanner"
 )
 
-type ScanReport struct {
-	Target  string                       `json:"target"`
-	Results []scanner.HeaderCheckResult `json:"results"`
+type FullScanReport struct {
+	Target        string                         `json:"target"`
+	ScanTime      string                         `json:"scan_time"`
+	HeaderResults []scanner.HeaderCheckResult    `json:"header_results"`
+	TLSResult     *scanner.TLSCheckResult        `json:"tls_result,omitempty"`
+	InfoResults   []scanner.InfoLeakResult       `json:"info_disclosure_results"`
+	ProbesResults []scanner.EndpointCheckResult  `json:"endpoint_probe_results"`
 }
 
-func SaveJSON(filename string, target string, results []scanner.HeaderCheckResult) error {
-	rep := ScanReport{
-		Target:  target,
-		Results: results,
+func SaveFullJSON(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult) error {
+	rep := FullScanReport{
+		Target:        target,
+		ScanTime:      time.Now().Format(time.RFC3339),
+		HeaderResults: headers,
+		TLSResult:     tlsRes,
+		InfoResults:   info,
+		ProbesResults: probes,
 	}
 
 	data, err := json.MarshalIndent(rep, "", "  ")
