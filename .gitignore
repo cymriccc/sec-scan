@@ -1,0 +1,15 @@
+# Binary executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+sec-scan
+
+# Output reports
+*.json
+
+# IDE / OS settings
+.vscode/
+.idea/
+.DS_Store
