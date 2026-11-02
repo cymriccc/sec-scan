@@ -13,3 +13,7 @@ sec-scan
 .vscode/
 .idea/
 .DS_Store
+
+# Local target lists & input files
+targets.txt
+*.txt
