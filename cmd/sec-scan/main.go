@@ -19,6 +19,7 @@ const (
 
 func main() {
 	outputFile := flag.String("o", "", "Path to export JSON report (e.g. -o report.json)")
+	htmlFile := flag.String("html", "", "Path to export HTML visual report (e.g. -html report.html)")
 	fileTarget := flag.String("f", "", "Path to text file containing target URLs for batch scanning")
 	workers := flag.Int("c", 5, "Number of concurrent workers for batch scanning")
 	failOnRisk := flag.Bool("fail-on-risk", false, "Exit with non-zero code (1) if critical vulnerabilities or F grade detected")
@@ -65,7 +66,7 @@ func main() {
 	// Mode 2: Single Target Scan
 	if len(args) < 1 {
 		fmt.Println("Usage:")
-		fmt.Println("  Single target : sec-scan [-o report.json] [--fail-on-risk] <target-url>")
+		fmt.Println("  Single target : sec-scan [-o report.json] [-html report.html] [--fail-on-risk] <target-url>")
 		fmt.Println("  Batch scan    : sec-scan -f targets.txt [-c workers] [--fail-on-risk]")
 		os.Exit(1)
 	}
@@ -122,6 +123,15 @@ func main() {
 
 	if *outputFile != "" {
 		_ = report.SaveFullJSON(*outputFile, target, headerResults, tlsResult, infoResults, endpointResults)
+	}
+
+	if *htmlFile != "" {
+		err := report.SaveHTMLReport(*htmlFile, target, headerResults, tlsResult, infoResults, endpointResults)
+		if err != nil {
+			fmt.Printf("\n%s[-] Failed to write HTML report: %v%s\n", ColorRed, err, ColorReset)
+		} else {
+			fmt.Printf("\n%s[+] HTML report successfully saved to %s%s\n", ColorGreen, *htmlFile, ColorReset)
+		}
 	}
 
 	if *failOnRisk && risk.IsCritical {

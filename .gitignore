@@ -8,6 +8,7 @@
 
 # Output reports
 *.json
+*.html
 
 # IDE / OS settings
 .vscode/
