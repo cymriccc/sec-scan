@@ -4,6 +4,7 @@
 ![Go Version](https://img.shields.io/badge/Go-1.22%2B-7FD5EA?style=flat-square&logo=go&logoColor=white)
 ![Domain](https://img.shields.io/badge/Domain-AppSec%20%7C%20WAF-E05D44?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-3371E3?style=flat-square&logo=fedora&logoColor=white)
+[![Build Status](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml/badge.svg)](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml)
 
 > A lightweight, modular security auditing CLI written in Go to evaluate web application header configurations, SSL/TLS certificates, tech stack disclosures, and sensitive endpoint exposures.
 

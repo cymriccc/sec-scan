@@ -1,0 +1,36 @@
+name: sec-scan Automated Audit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 1' # Runs every Monday at midnight
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Build sec-scan Binary
+      run: go build -v -o sec-scan ./cmd/sec-scan
+
+    - name: Execute Security Gate Audit
+      run: ./sec-scan -o report.json -html report.html https://math-mosaic.vercel.app
+
+    - name: Upload Security Reports as Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-audit-reports
+        path: |
+          report.json
+          report.html
