@@ -8,7 +8,7 @@ type RiskAssessment struct {
 }
 
 // EvaluateRisk calculates a score from 0-100 and flags critical pipeline failures
-func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoLeakResult, endpoints []EndpointCheckResult) RiskAssessment {
+func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoLeakResult, endpoints []EndpointCheckResult, cors CORSResult) RiskAssessment {
 	score := 100
 	var issues []string
 	critical := false
@@ -52,6 +52,18 @@ func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoL
 				score -= 10
 				issues = append(issues, "Exposed Endpoint: "+ep.Path)
 			}
+		}
+	}
+
+	// 5. CORS Penalties
+	if cors.IsVulnerable {
+		if cors.RiskLevel == "HIGH" {
+			score -= 20
+			critical = true
+			issues = append(issues, "HIGH Risk CORS Misconfiguration: "+cors.Details)
+		} else {
+			score -= 10
+			issues = append(issues, "CORS Misconfiguration: "+cors.Details)
 		}
 	}
 

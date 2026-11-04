@@ -9,20 +9,22 @@ import (
 )
 
 type FullScanReport struct {
-	Target        string                         `json:"target"`
-	ScanTime      string                         `json:"scan_time"`
-	HeaderResults []scanner.HeaderCheckResult    `json:"header_results"`
-	TLSResult     *scanner.TLSCheckResult        `json:"tls_result,omitempty"`
-	InfoResults   []scanner.InfoLeakResult       `json:"info_disclosure_results"`
-	ProbesResults []scanner.EndpointCheckResult  `json:"endpoint_probe_results"`
+	Target        string                        `json:"target"`
+	ScanTime      string                        `json:"scan_time"`
+	HeaderResults []scanner.HeaderCheckResult   `json:"header_results"`
+	TLSResult     *scanner.TLSCheckResult       `json:"tls_result,omitempty"`
+	CORSResult    scanner.CORSResult            `json:"cors_result"`
+	InfoResults   []scanner.InfoLeakResult      `json:"info_disclosure_results"`
+	ProbesResults []scanner.EndpointCheckResult `json:"endpoint_probe_results"`
 }
 
-func SaveFullJSON(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult) error {
+func SaveFullJSON(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult) error {
 	rep := FullScanReport{
 		Target:        target,
 		ScanTime:      time.Now().Format(time.RFC3339),
 		HeaderResults: headers,
 		TLSResult:     tlsRes,
+		CORSResult:    corsRes,
 		InfoResults:   info,
 		ProbesResults: probes,
 	}

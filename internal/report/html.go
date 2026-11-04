@@ -8,9 +8,8 @@ import (
 	"github.com/cymriccc/sec-scan/internal/scanner"
 )
 
-func SaveHTMLReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult) error {
-	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes)
-
+func SaveHTMLReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult) error {
+	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes, corsRes)
 	htmlContent := fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,7 +37,6 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
             <h1>sec-scan Audit Report</h1>
             <p>Target: <strong>%s</strong> | Timestamp: %s</p>
         </div>
-
         <div class="grade-card">
             <div>
                 <h3 style="margin:0; color:#94a3b8;">Security Posture Score</h3>
@@ -46,7 +44,6 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
             </div>
             <div class="grade">Grade %s</div>
         </div>
-
         <div class="section">
             <h2>HTTP Security Headers</h2>
             <table>
@@ -61,7 +58,6 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
 		}
 		htmlContent += fmt.Sprintf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>", h.Header, status, val)
 	}
-
 	htmlContent += `</table></div></div></body></html>`
 
 	return os.WriteFile(filename, []byte(htmlContent), 0644)
