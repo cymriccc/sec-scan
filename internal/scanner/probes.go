@@ -26,6 +26,7 @@ var PathsToProbe = []struct {
 	{"/sitemap.xml", "INFO"},
 }
 
+// AuditEndpoints scans predefined sensitive paths on a base URL.
 func AuditEndpoints(baseURL string) ([]EndpointCheckResult, error) {
 	client := &http.Client{
 		Timeout: 5 * time.Second,
@@ -56,4 +57,23 @@ func AuditEndpoints(baseURL string) ([]EndpointCheckResult, error) {
 	}
 
 	return results, nil
+}
+
+// ExecuteAllProbes runs both endpoint auditing and CORS verification for a single target URL.
+func ExecuteAllProbes(targetURL string) ([]EndpointCheckResult, CORSResult, error) {
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	endpointResults, err := AuditEndpoints(targetURL)
+	if err != nil {
+		return nil, CORSResult{}, err
+	}
+
+	corsResult := CheckCORS(targetURL, client)
+
+	return endpointResults, corsResult, nil
 }
