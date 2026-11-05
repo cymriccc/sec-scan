@@ -10,11 +10,10 @@ import (
 )
 
 const (
-	ColorReset  = "\033[0m"
-	ColorRed    = "\033[31m"
-	ColorGreen  = "\033[32m"
-	ColorYellow = "\033[33m"
-	ColorCyan   = "\033[36m"
+	ColorReset = "\033[0m"
+	ColorRed   = "\033[31m"
+	ColorGreen = "\033[32m"
+	ColorCyan  = "\033[36m"
 )
 
 func main() {
@@ -70,78 +69,42 @@ func main() {
 	target := args[0]
 
 	// 1. Headers Audit
-	fmt.Printf("%s[+] Auditing security headers for: %s%s\n\n", ColorCyan, target, ColorReset)
 	headerResults, _ := scanner.AuditHeaders(target)
-	for _, res := range headerResults {
-		if res.Found {
-			fmt.Printf("%s[PASS]%s %-28s : %s\n", ColorGreen, ColorReset, res.Header, res.Value)
-		} else {
-			fmt.Printf("%s[FAIL]%s %-28s : MISSING (Recommended: %s)\n", ColorRed, ColorReset, res.Header, res.Recommended)
-		}
-	}
+	scanner.PrintHeaderReport(target, headerResults)
 
 	// 2. SSL/TLS Audit
-	fmt.Printf("\n%s[+] Auditing SSL/TLS Certificate...%s\n\n", ColorCyan, ColorReset)
 	tlsResult, _ := scanner.AuditTLS(target)
-	if tlsResult != nil {
-		fmt.Printf("  Issuer         : %s\n", tlsResult.Issuer)
-		fmt.Printf("  Protocol       : %s\n", tlsResult.TLSVersion)
-		if tlsResult.IsExpired {
-			fmt.Printf("  Status         : %sEXPIRED%s\n", ColorRed, ColorReset)
-		} else {
-			fmt.Printf("  Status         : %sVALID%s (%d days remaining)\n", ColorGreen, ColorReset, tlsResult.DaysRemaining)
-		}
-	}
+	scanner.PrintTLSReport(tlsResult)
 
 	// 3. CORS Audit
-	fmt.Printf("\n%s[+] Auditing CORS Configuration...%s\n\n", ColorCyan, ColorReset)
 	corsResult := scanner.CheckCORS(target, nil)
-	if corsResult.IsVulnerable {
-		fmt.Printf("%s[FAIL]%s CORS Configuration         : %s (Risk: %s)\n", ColorRed, ColorReset, corsResult.Details, corsResult.RiskLevel)
-	} else {
-		fmt.Printf("%s[PASS]%s CORS Configuration         : SECURE (No arbitrary origin reflection)\n", ColorGreen, ColorReset)
-	}
+	scanner.PrintCORSReport(corsResult)
 
 	// 4. Server Tech Disclosure Audit
-	fmt.Printf("\n%s[+] Auditing Server Technology Disclosure...%s\n\n", ColorCyan, ColorReset)
 	infoResults, _ := scanner.AuditInfoLeaks(target)
-	for _, info := range infoResults {
-		if info.Found {
-			fmt.Printf("%s[WARN]%s %-20s : %s\n", ColorYellow, ColorReset, info.Header, info.Value)
-		} else {
-			fmt.Printf("%s[SAFE]%s %-20s : HIDDEN\n", ColorGreen, ColorReset, info.Header)
-		}
-	}
+	scanner.PrintInfoLeaksReport(infoResults)
 
 	// 5. Sensitive Endpoint Probing
-	fmt.Printf("\n%s[+] Probing sensitive endpoints & files...%s\n\n", ColorCyan, ColorReset)
 	endpointResults, _ := scanner.AuditEndpoints(target)
-	for _, ep := range endpointResults {
-		if ep.Exposed {
-			fmt.Printf("%s[%s]%s %-20s : %d OK (Exposed!)\n", ColorRed, ep.Severity, ColorReset, ep.Path, ep.StatusCode)
-		} else {
-			fmt.Printf("%s[SAFE]%s %-20s : %d\n", ColorGreen, ColorReset, ep.Path, ep.StatusCode)
-		}
+	scanner.PrintEndpointsReport(endpointResults)
+
+	// Summary & Risk Evaluation
+	risk := scanner.EvaluateRisk(headerResults, tlsResult, infoResults, endpointResults, corsResult)
+	scanner.PrintSummary(risk)
+
+	// File Exports
+	if *outputFile != "" {
+		_ = report.SaveFullJSON(*outputFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult)
 	}
 
-	// Calculate overall score
-	risk := scanner.EvaluateRisk(headerResults, tlsResult, infoResults, endpointResults, corsResult)
-	fmt.Printf("\n%s[+] Security Posture Summary:%s\n", ColorCyan, ColorReset)
-	fmt.Printf("  Overall Score  : %d / 100\n", risk.TotalScore)
-	fmt.Printf("  Security Grade : %s\n", risk.Grade)
-
-	if *outputFile != "" {
-    _ = report.SaveFullJSON(*outputFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult)
-}
-
-if *htmlFile != "" {
-    err := report.SaveHTMLReport(*htmlFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult)
-    if err != nil {
-        fmt.Printf("\n%s[-] Failed to write HTML report: %v%s\n", ColorRed, err, ColorReset)
-    } else {
-        fmt.Printf("\n%s[+] HTML report successfully saved to %s%s\n", ColorGreen, *htmlFile, ColorReset)
-    }
-}
+	if *htmlFile != "" {
+		err := report.SaveHTMLReport(*htmlFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult)
+		if err != nil {
+			fmt.Printf("\n%s[-] Failed to write HTML report: %v%s\n", ColorRed, err, ColorReset)
+		} else {
+			fmt.Printf("\n%s[+] HTML report successfully saved to %s%s\n", ColorGreen, *htmlFile, ColorReset)
+		}
+	}
 
 	if *failOnRisk && risk.IsCritical {
 		fmt.Printf("\n%s[-] CI/CD Gate Failed: Target security posture failed risk threshold.%s\n", ColorRed, ColorReset)
