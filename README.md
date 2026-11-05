@@ -6,52 +6,68 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-3371E3?style=flat-square&logo=fedora&logoColor=white)
 [![Build Status](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml/badge.svg)](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml)
 
-> A lightweight, modular security auditing CLI written in Go to evaluate web application header configurations, SSL/TLS certificates, tech stack disclosures, and sensitive endpoint exposures.
+> A lightweight, modular security auditing CLI written in Go to evaluate web application header configurations, SSL/TLS certificates, CORS misconfigurations, tech stack disclosures, and sensitive endpoint exposures.
 
 ## 📸 Preview
 
 ```text
 [+] Auditing security headers for: https://math-mosaic.vercel.app
 
+[PASS] Strict-Transport-Security    : max-age=63072000; includeSubDomains; preload
 [PASS] X-Frame-Options              : DENY
 [PASS] X-Content-Type-Options       : nosniff
 [FAIL] Content-Security-Policy      : MISSING (Recommended: default-src 'self')
 [PASS] Referrer-Policy              : strict-origin-when-cross-origin
 [FAIL] Permissions-Policy           : MISSING (Recommended: geolocation=(), microphone=())
-[PASS] Strict-Transport-Security    : max-age=63072000; includeSubDomains; preload
 
 [+] Auditing SSL/TLS Certificate...
 
   Issuer         : WR1
   Protocol       : TLS 1.3
-  Status         : VALID (89 days remaining until 2027-01-29)
+  Status         : VALID (84 days remaining)
+
+[+] Auditing CORS Configuration...
+
+[FAIL] CORS Configuration         : Wildcard (*) Access-Control-Allow-Origin header detected. (Risk: MEDIUM)
 
 [+] Auditing Server Technology Disclosure...
 
-  [SAFE] Server               : HIDDEN
-  [SAFE] X-Powered-By         : HIDDEN
+[WARN] Server               : Vercel
+[SAFE] X-Powered-By         : HIDDEN
+[SAFE] X-AspNet-Version     : HIDDEN
+[SAFE] X-Generator          : HIDDEN
+[SAFE] Via                  : HIDDEN
 
 [+] Probing sensitive endpoints & files...
 
-  [SAFE] /.env                : 404
-  [SAFE] /.git/HEAD           : 404
-  [SAFE] /config.json         : 404
+[SAFE] /.env                : 404
+[SAFE] /.git/HEAD           : 404
+[SAFE] /config.json         : 404
+[SAFE] /admin               : 404
+[SAFE] /robots.txt          : 404
+[SAFE] /sitemap.xml         : 404
+
+[+] Security Posture Summary:
+  Overall Score  : 75 / 100
+  Security Grade : C
 ```
 
 ## ✨ Features
 
-* 🔐 **HTTP Security Header Audit**: Probes target URLs for missing foundational defenses (`HSTS`, `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
-* 📜 **SSL/TLS Certificate Inspector**: Evaluates certificate validity, expiration countdowns, issuer authority, and active TLS protocol versions (`TLS 1.3`).
-* 🕵️ **Server Technology Disclosure Detection**: Flags verbose server headers (`Server`, `X-Powered-By`, `X-AspNet-Version`) that expose backend stack details.
-* 🎯 **Sensitive Endpoint & Asset Probing**: Audits common leak paths like environment files (`.env`), Git internal configurations (`.git/HEAD`), and admin portals.
-* 📊 **Automated JSON Export**: Supports single-flag automated output (`-o report.json`) for CI/CD integration and compliance archiving.
+- 🔐 **HTTP Security Header Audit**: Probes target URLs for missing foundational defenses (`HSTS`, `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
+- 📜 **SSL/TLS Certificate Inspector**: Evaluates certificate validity, expiration countdowns, issuer authority, and active TLS protocol versions (`TLS 1.3`).
+- 🌐 **CORS Security Auditor**: Detects wildcards (`*`) and dangerous arbitrary origin reflection with credentials enabled.
+- 🕵️ **Server Technology Disclosure Detection**: Flags verbose server headers (`Server`, `X-Powered-By`, `X-AspNet-Version`, `Via`) exposing backend stack details.
+- 🎯 **Sensitive Endpoint & Asset Probing**: Audits common leak paths like environment files (`.env`), Git internal configurations (`.git/HEAD`), config files, and admin portals.
+- 🎨 **Modern Interactive HTML Dashboard**: Generates visual security reports featuring Tailwind CSS, Chart.js posture score gauges, Lucide icons, JetBrains Mono font, and smooth Light/Dark mode toggling.
+- 📊 **Automated JSON Export & CI/CD Gating**: Supports automated JSON output (`-o report.json`) and risk threshold gating (`-fail-on-risk`) for automated pipelines.
 
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
 
-* [Go 1.22+](https://golang.org/dl/)
-* Git
+- [Go 1.22+](https://golang.org/dl/)
+- Git
 
 ### Build from Source
 
@@ -112,7 +128,7 @@ go run cmd/sec-scan/main.go -f targets.txt -c 10 -html report.html
 ---
 
 ### CI/CD Pipeline Gating
-Use `-fail-on-risk` in automated workflows to fail builds when critical vulnerabilities are found:
+Use `-fail-on-risk` in automated workflows to fail builds when critical vulnerabilities or an `F` grade are detected:
 
 ```bash
 go run cmd/sec-scan/main.go -fail-on-risk -f targets.txt
@@ -136,18 +152,23 @@ go run cmd/sec-scan/main.go -fail-on-risk -f targets.txt
 sec-scan/
 ├── cmd/
 │   └── sec-scan/
-│       └── main.go       # CLI Entrypoint & ANSI Terminal Renderer
+│       └── main.go         # CLI Entrypoint & Workflow Router
 ├── internal/
-│   ├── scanner/          # Core Auditing Engines
-│   │   ├── headers.go    # HTTP Security Header Auditor
-│   │   ├── tls.go        # SSL/TLS Certificate Inspector
-│   │   ├── info.go       # Technology Leak Detector
-│   │   └── probes.go     # Sensitive Endpoint & Asset Probe
-│   └── report/
-│       └── output.go     # Multi-Module JSON Report Exporter
+│   ├── scanner/            # Core Auditing Engines & CLI Output
+│   │   ├── headers.go      # HTTP Security Header Auditor
+│   │   ├── tls.go          # SSL/TLS Certificate Inspector
+│   │   ├── cors.go         # CORS Misconfiguration Auditor
+│   │   ├── info.go         # Technology Leak Detector
+│   │   ├── probes.go       # Sensitive Endpoint & Asset Probe
+│   │   ├── risk.go         # Security Score & Risk Calculator
+│   │   ├── concurrent.go   # Batch Worker Pool Scanner
+│   │   └── printer.go      # Modular ANSI Terminal Color Renderer
+│   └── report/             # Report Generators
+│       ├── output.go       # JSON Exporter
+│       └── html.go         # Interactive Glassmorphism HTML Generator
 ├── .gitignore
 ├── go.mod
-└── README.txt
+└── README.md
 ```
 
 ## 📝 License
@@ -156,4 +177,4 @@ Distributed under the MIT License. See `LICENSE` for details.
 
 ## 👤 Author
 
-* GitHub: [@cymriccc](https://github.com/cymriccc)
+- GitHub: [@cymriccc](https://github.com/cymriccc)
