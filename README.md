@@ -60,7 +60,8 @@
 - 🕵️ **Server Technology Disclosure Detection**: Flags verbose server headers (`Server`, `X-Powered-By`, `X-AspNet-Version`, `Via`) exposing backend stack details.
 - 🎯 **Sensitive Endpoint & Asset Probing**: Audits common leak paths like environment files (`.env`), Git internal configurations (`.git/HEAD`), config files, and admin portals.
 - 🎨 **Modern Interactive HTML Dashboard**: Generates visual security reports featuring Tailwind CSS, Chart.js posture score gauges, Lucide icons, JetBrains Mono font, and smooth Light/Dark mode toggling.
-- 📊 **Automated JSON Export & CI/CD Gating**: Supports automated JSON output (`-o report.json`) and risk threshold gating (`-fail-on-risk`) for automated pipelines.
+- 📝 **Structured Markdown Reports**: Exports clean, GitHub-flavored Markdown audit summaries (`-md report.md`) ideal for PR comments, wikis, and documentation.
+- 📊 **Automated JSON Export & CI/CD Gating**: Supports automated JSON output (`-o report.json`), stdout streaming (`-json-stdout`), quiet mode (`-q`), and risk threshold gating (`-fail-on-risk`) for automated pipelines.
 
 ## 🛠️ Installation & Setup
 
@@ -99,7 +100,7 @@ go run cmd/sec-scan/main.go https://target-website.com
 ---
 
 ### Exporting Security Audit Reports
-Use `-o` for JSON export and `-html` for HTML visual reports:
+Use `-o` for JSON export, `-html` for HTML visual reports, and `-md` for Markdown reports:
 
 ```bash
 # Export JSON report
@@ -108,8 +109,14 @@ go run cmd/sec-scan/main.go -o report.json https://target-website.com
 # Export HTML visual report
 go run cmd/sec-scan/main.go -html report.html https://target-website.com
 
-# Export both JSON & HTML reports
-go run cmd/sec-scan/main.go -o report.json -html report.html https://target-website.com
+# Export Markdown report
+go run cmd/sec-scan/main.go -md report.md https://target-website.com
+
+# Export JSON, HTML & Markdown reports simultaneously
+go run cmd/sec-scan/main.go -o report.json -html report.html -md report.md https://target-website.com
+
+# Stream JSON results to stdout (ideal for jq piping)
+go run cmd/sec-scan/main.go -json-stdout -q https://target-website.com | jq .
 ```
 
 ---
@@ -144,6 +151,9 @@ go run cmd/sec-scan/main.go -fail-on-risk -f targets.txt
 | `-f` | `string` | Path to text file containing target URLs for batch scanning | `""` |
 | `-o` | `string` | Path to export JSON report (e.g. `-o report.json`) | `""` |
 | `-html` | `string` | Path to export HTML visual report (e.g. `-html report.html`) | `""` |
+| `-md` | `string` | Path to export Markdown report (e.g. `-md report.md`) | `""` |
+| `-q` | `bool` | Quiet mode: Suppress banner and standard terminal outputs | `false` |
+| `-json-stdout` | `bool` | Print JSON audit results directly to stdout for piping | `false` |
 | `-fail-on-risk` | `bool` | Exit with non-zero code (`1`) if critical vulnerabilities or F grade detected | `false` |
 
 ## 📁 Project Architecture
@@ -165,7 +175,8 @@ sec-scan/
 │   │   └── printer.go      # Modular ANSI Terminal Color Renderer
 │   └── report/             # Report Generators
 │       ├── output.go       # JSON Exporter
-│       └── html.go         # Interactive Glassmorphism HTML Generator
+│       ├── html.go         # Interactive Glassmorphism HTML Generator
+│       └── md.go           # Structured Markdown Exporter
 ├── .gitignore
 ├── go.mod
 └── README.md

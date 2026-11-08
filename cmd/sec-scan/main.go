@@ -19,6 +19,7 @@ const (
 func main() {
 	outputFile := flag.String("o", "", "Path to export JSON report (e.g. -o report.json)")
 	htmlFile := flag.String("html", "", "Path to export HTML visual report (e.g. -html report.html)")
+	mdFile := flag.String("md", "", "Path to export Markdown report (e.g. -md report.md)")
 	fileTarget := flag.String("f", "", "Path to text file containing target URLs for batch scanning")
 	workers := flag.Int("c", 5, "Number of concurrent workers for batch scanning")
 	failOnRisk := flag.Bool("fail-on-risk", false, "Exit with non-zero code (1) if critical vulnerabilities or F grade detected")
@@ -75,7 +76,7 @@ func main() {
 	// Mode 2: Single Target Scan
 	if len(args) < 1 {
 		fmt.Println("Usage:")
-		fmt.Println("  Single target : sec-scan [-o report.json] [-html report.html] [-q] [-json-stdout] [--fail-on-risk] <target-url>")
+		fmt.Println("  Single target : sec-scan [-o report.json] [-html report.html] [-md report.md] [-q] [-json-stdout] [--fail-on-risk] <target-url>")
 		fmt.Println("  Batch scan    : sec-scan -f targets.txt [-c workers] [-q] [--fail-on-risk]")
 		os.Exit(1)
 	}
@@ -130,6 +131,15 @@ func main() {
 		}
 	}
 
+	if *mdFile != "" {
+		err := report.SaveMarkdownReport(*mdFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult)
+		if err != nil && !*quietFlag {
+			fmt.Printf("\n%s[-] Failed to write Markdown report: %v%s\n", ColorRed, err, ColorReset)
+		} else if !*quietFlag {
+			fmt.Printf("\n%s[+] Markdown report successfully saved to %s%s\n", ColorGreen, *mdFile, ColorReset)
+		}
+	}
+	
 	if *failOnRisk && risk.IsCritical {
 		if !*quietFlag {
 			fmt.Printf("\n%s[-] CI/CD Gate Failed: Target security posture failed risk threshold.%s\n", ColorRed, ColorReset)

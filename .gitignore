@@ -9,6 +9,7 @@
 # Output reports
 *.json
 *.html
+*.md
 
 # IDE / OS settings
 .vscode/
