@@ -6,10 +6,11 @@ import (
 )
 
 type HeaderCheckResult struct {
-	Header      string
-	Found       bool
-	Value       string
-	Recommended string
+	Header      string            `json:"header"`
+	Found       bool              `json:"found"`
+	Value       string            `json:"value,omitempty"`
+	Recommended string            `json:"recommended,omitempty"`
+	Remediation HeaderRemediation `json:"remediation,omitempty"`
 }
 
 var RecommendedHeaders = map[string]string{
@@ -40,6 +41,7 @@ func AuditHeaders(targetURL string) ([]HeaderCheckResult, error) {
 			Found:       val != "",
 			Value:       val,
 			Recommended: recommended,
+			Remediation: GetHeaderRemediation(header),
 		})
 	}
 
