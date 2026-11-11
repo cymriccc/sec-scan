@@ -22,12 +22,20 @@ var RecommendedHeaders = map[string]string{
 	"Permissions-Policy":        "geolocation=(), microphone=()",
 }
 
-func AuditHeaders(targetURL string) ([]HeaderCheckResult, error) {
+func AuditHeaders(targetURL string, userAgent string, timeout time.Duration) ([]HeaderCheckResult, error) {
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: timeout,
 	}
 
-	resp, err := client.Get(targetURL)
+	req, err := http.NewRequest("GET", targetURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	if userAgent != "" {
+		req.Header.Set("User-Agent", userAgent)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

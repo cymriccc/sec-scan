@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/cymriccc/sec-scan/internal/report"
 	"github.com/cymriccc/sec-scan/internal/scanner"
@@ -25,6 +26,8 @@ func main() {
 	failOnRisk := flag.Bool("fail-on-risk", false, "Exit with non-zero code (1) if critical vulnerabilities or F grade detected")
 	quietFlag := flag.Bool("q", false, "Quiet mode: Suppress banner and standard terminal outputs")
 	stdoutFlag := flag.Bool("json-stdout", false, "Print JSON audit results directly to stdout for piping")
+	userAgent := flag.String("ua", "sec-scan/1.0", "Custom User-Agent header for HTTP requests")
+	timeoutSec := flag.Int("timeout", 10, "HTTP request timeout in seconds")
 
 	flag.Parse()
 	args := flag.Args()
@@ -84,7 +87,8 @@ func main() {
 	target := args[0]
 
 	// 1. Headers Audit
-	headerResults, _ := scanner.AuditHeaders(target)
+	timeout := time.Duration(*timeoutSec) * time.Second
+	headerResults, _ := scanner.AuditHeaders(target, *userAgent, timeout)
 
 	// 2. SSL/TLS Audit
 	tlsResult, _ := scanner.AuditTLS(target)

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 type BatchTargetResult struct {
@@ -50,7 +51,7 @@ func RunConcurrentScan(targets []string, concurrency int) []BatchTargetResult {
 			for target := range targetChan {
 				res := BatchTargetResult{Target: target}
 
-				headers, err := AuditHeaders(target)
+				headers, err := AuditHeaders(target, "sec-scan/1.0", 10*time.Second)
 				if err != nil {
 					res.Error = err.Error()
 					resultChan <- res
