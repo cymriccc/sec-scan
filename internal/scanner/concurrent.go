@@ -15,6 +15,7 @@ type BatchTargetResult struct {
 	InfoLeaks []InfoLeakResult      `json:"info_leaks,omitempty"`
 	Endpoints []EndpointCheckResult `json:"endpoints,omitempty"`
 	CORS      CORSResult            `json:"cors,omitempty"`
+	Cookies   []CookieFinding       `json:"cookies,omitempty"`
 	Error     string                `json:"error,omitempty"`
 }
 
@@ -70,6 +71,9 @@ func RunConcurrentScan(targets []string, concurrency int) []BatchTargetResult {
 
 				corsRes := CheckCORS(target, nil)
 				res.CORS = corsRes
+
+				cookieRes, _ := AuditCookies(target, "sec-scan/1.0", 10*time.Second)
+				res.Cookies = cookieRes
 
 				resultChan <- res
 			}

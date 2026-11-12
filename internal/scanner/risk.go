@@ -8,7 +8,7 @@ type RiskAssessment struct {
 }
 
 // EvaluateRisk calculates a score from 0-100 and flags critical pipeline failures
-func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoLeakResult, endpoints []EndpointCheckResult, cors CORSResult) RiskAssessment {
+func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoLeakResult, endpoints []EndpointCheckResult, cors CORSResult, cookies []CookieFinding) RiskAssessment {
 	score := 100
 	var issues []string
 	critical := false
@@ -65,6 +65,19 @@ func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoL
 			score -= 10
 			issues = append(issues, "CORS Misconfiguration: "+cors.Details)
 		}
+	}
+
+	// 6. Cookie Security Penalties
+	for _, c := range cookies {
+		switch c.Severity {
+		case "HIGH":
+			score -= 10
+		case "MEDIUM":
+			score -= 5
+		default:
+			score -= 2
+		}
+		issues = append(issues, "Cookie ("+c.CookieName+"): "+c.Issue)
 	}
 
 	if score < 0 {

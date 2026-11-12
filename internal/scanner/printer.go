@@ -73,6 +73,22 @@ func PrintEndpointsReport(endpointResults []EndpointCheckResult) {
 	}
 }
 
+// PrintCookieReport outputs Set-Cookie security audit results
+func PrintCookieReport(cookieResults []CookieFinding) {
+	fmt.Printf("\n%s[+] Auditing Cookie Security Flags...%s\n\n", ColorCyan, ColorReset)
+	if len(cookieResults) == 0 {
+		fmt.Printf("%s[SAFE]%s Set-Cookie Headers         : No insecure cookies detected\n", ColorGreen, ColorReset)
+		return
+	}
+	for _, c := range cookieResults {
+		color := ColorYellow
+		if c.Severity == "HIGH" {
+			color = ColorRed
+		}
+		fmt.Printf("%s[%s]%s %-20s : %s (%s)\n", color, c.Severity, ColorReset, c.CookieName, c.Issue, c.Advice)
+	}
+}
+
 // PrintSummary outputs the overall posture score and grade
 func PrintSummary(risk RiskAssessment) {
 	fmt.Printf("\n%s[+] Security Posture Summary:%s\n", ColorCyan, ColorReset)
