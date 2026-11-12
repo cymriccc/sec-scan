@@ -8,8 +8,8 @@ import (
 	"github.com/cymriccc/sec-scan/internal/scanner"
 )
 
-func SaveHTMLReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult) error {
-	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes, corsRes)
+func SaveHTMLReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult, cookies []scanner.CookieFinding) error {
+	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes, corsRes, cookies)
 
 	// Determine grade badge colors
 	gradeColor := "from-emerald-500 to-teal-600 shadow-emerald-500/20"
@@ -71,6 +71,29 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
 			<td class="py-3.5 px-4">%s</td>
 			<td class="py-3.5 px-4 font-mono text-xs text-slate-500 dark:text-slate-400">%d</td>
 		</tr>`, ep.Path, statusBadge, ep.StatusCode)
+	}
+
+	// Build Cookies Rows
+	cookiesHTML := ""
+	if len(cookies) == 0 {
+		cookiesHTML = `<tr><td colspan="4" class="py-4 px-4 text-center text-xs text-slate-400 italic">No insecure cookies detected.</td></tr>`
+	} else {
+		for _, c := range cookies {
+			statusBadge := `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> MEDIUM</span>`
+			if c.Severity == "HIGH" {
+				statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"><i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i> HIGH</span>`
+			} else if c.Severity == "LOW" {
+				statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20"><i data-lucide="info" class="w-3.5 h-3.5"></i> LOW</span>`
+			}
+
+			cookiesHTML += fmt.Sprintf(`
+			<tr class="border-b border-slate-200/70 dark:border-slate-800/70 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors">
+				<td class="py-3.5 px-4 font-mono font-semibold text-xs text-slate-800 dark:text-slate-200">%s</td>
+				<td class="py-3.5 px-4">%s</td>
+				<td class="py-3.5 px-4 text-xs text-slate-700 dark:text-slate-300 font-medium">%s</td>
+				<td class="py-3.5 px-4 text-xs text-slate-500 dark:text-slate-400">%s</td>
+			</tr>`, c.CookieName, statusBadge, c.Issue, c.Advice)
+		}
 	}
 
 	// TLS Section
@@ -302,6 +325,27 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
                 </table>
             </div>
         </section>
+
+        <!-- Cookie Security Section -->
+        <section class="bg-white/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 glass shadow-sm dark:shadow-xl space-y-4">
+            <div class="flex items-center gap-2 text-amber-500 dark:text-amber-400 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <i data-lucide="cookie" class="w-5 h-5"></i>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Cookie Security Flags</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <th class="py-3 px-4">Cookie</th>
+                            <th class="py-3 px-4">Severity</th>
+                            <th class="py-3 px-4">Issue</th>
+                            <th class="py-3 px-4">Remediation</th>
+                        </tr>
+                    </thead>
+                    <tbody>%s</tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
     <footer class="max-w-6xl mx-auto px-6 mt-12 text-center text-xs text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-6">
@@ -384,6 +428,7 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
 		corsHTML,
 		infoHTML,
 		probesHTML,
+		cookiesHTML,
 		risk.TotalScore,
 	)
 
