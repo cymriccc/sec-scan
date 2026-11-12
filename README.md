@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-3371E3?style=flat-square&logo=fedora&logoColor=white)
 [![Build Status](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml/badge.svg)](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml)
 
-> A lightweight, modular security auditing CLI written in Go to evaluate web application header configurations, SSL/TLS certificates, CORS misconfigurations, tech stack disclosures, and sensitive endpoint exposures.
+> A lightweight, modular security auditing CLI written in Go to evaluate web application header configurations, SSL/TLS certificates, CORS misconfigurations, cookie security flags, tech stack disclosures, and sensitive endpoint exposures.
 
 ## 📸 Preview
 
@@ -47,6 +47,10 @@
 [SAFE] /robots.txt          : 404
 [SAFE] /sitemap.xml         : 404
 
+[+] Auditing Cookie Security Flags...
+
+[SAFE] Set-Cookie Headers         : No insecure cookies detected
+
 [+] Security Posture Summary:
   Overall Score  : 75 / 100
   Security Grade : C
@@ -57,6 +61,7 @@
 - 🔐 **HTTP Security Header Audit**: Probes target URLs for missing foundational defenses (`HSTS`, `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
 - 📜 **SSL/TLS Certificate Inspector**: Evaluates certificate validity, expiration countdowns, issuer authority, and active TLS protocol versions (`TLS 1.3`).
 - 🌐 **CORS Security Auditor**: Detects wildcards (`*`) and dangerous arbitrary origin reflection with credentials enabled.
+- 🍪 **Cookie Security Auditor**: Inspects `Set-Cookie` headers for missing `Secure`, `HttpOnly`, and `SameSite` attributes to mitigate session hijacking and CSRF.
 - 🕵️ **Server Technology Disclosure Detection**: Flags verbose server headers (`Server`, `X-Powered-By`, `X-AspNet-Version`, `Via`) exposing backend stack details.
 - 🎯 **Sensitive Endpoint & Asset Probing**: Audits common leak paths like environment files (`.env`), Git internal configurations (`.git/HEAD`), config files, and admin portals.
 - 🎨 **Modern Interactive HTML Dashboard**: Generates visual security reports featuring Tailwind CSS, Chart.js posture score gauges, Lucide icons, JetBrains Mono font, and smooth Light/Dark mode toggling.
@@ -152,6 +157,8 @@ go run cmd/sec-scan/main.go -fail-on-risk -f targets.txt
 | `-o` | `string` | Path to export JSON report (e.g. `-o report.json`) | `""` |
 | `-html` | `string` | Path to export HTML visual report (e.g. `-html report.html`) | `""` |
 | `-md` | `string` | Path to export Markdown report (e.g. `-md report.md`) | `""` |
+| `-ua` | `string` | Custom User-Agent header for HTTP requests | `"sec-scan/1.0"` |
+| `-timeout` | `int` | HTTP request timeout in seconds | `10` |
 | `-q` | `bool` | Quiet mode: Suppress banner and standard terminal outputs | `false` |
 | `-json-stdout` | `bool` | Print JSON audit results directly to stdout for piping | `false` |
 | `-fail-on-risk` | `bool` | Exit with non-zero code (`1`) if critical vulnerabilities or F grade detected | `false` |
@@ -162,21 +169,24 @@ go run cmd/sec-scan/main.go -fail-on-risk -f targets.txt
 sec-scan/
 ├── cmd/
 │   └── sec-scan/
-│       └── main.go         # CLI Entrypoint & Workflow Router
+│       └── main.go          # CLI Entrypoint & Workflow Router
 ├── internal/
-│   ├── scanner/            # Core Auditing Engines & CLI Output
-│   │   ├── headers.go      # HTTP Security Header Auditor
-│   │   ├── tls.go          # SSL/TLS Certificate Inspector
-│   │   ├── cors.go         # CORS Misconfiguration Auditor
-│   │   ├── info.go         # Technology Leak Detector
-│   │   ├── probes.go       # Sensitive Endpoint & Asset Probe
-│   │   ├── risk.go         # Security Score & Risk Calculator
-│   │   ├── concurrent.go   # Batch Worker Pool Scanner
-│   │   └── printer.go      # Modular ANSI Terminal Color Renderer
-│   └── report/             # Report Generators
-│       ├── output.go       # JSON Exporter
-│       ├── html.go         # Interactive Glassmorphism HTML Generator
-│       └── md.go           # Structured Markdown Exporter
+│   ├── scanner/             # Core Auditing Engines & CLI Output
+│   │   ├── headers.go       # HTTP Security Header Auditor
+│   │   ├── tls.go           # SSL/TLS Certificate Inspector
+│   │   ├── cors.go          # CORS Misconfiguration Auditor
+│   │   ├── cookies.go       # Set-Cookie Security Auditor
+│   │   ├── cookies_test.go  # Cookie Auditor Unit Tests
+│   │   ├── info.go          # Technology Leak Detector
+│   │   ├── probes.go        # Sensitive Endpoint & Asset Probe
+│   │   ├── remediation.go   # Security Fix & Remediation Guides
+│   │   ├── risk.go          # Security Score & Risk Calculator
+│   │   ├── concurrent.go    # Batch Worker Pool Scanner
+│   │   └── printer.go       # Modular ANSI Terminal Color Renderer
+│   └── report/              # Report Generators
+│       ├── output.go        # JSON Exporter
+│       ├── html.go          # Interactive Glassmorphism HTML Generator
+│       └── md.go            # Structured Markdown Exporter
 ├── .gitignore
 ├── go.mod
 └── README.md
