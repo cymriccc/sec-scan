@@ -67,6 +67,7 @@
 - 🎨 **Modern Interactive HTML Dashboard**: Generates visual security reports featuring Tailwind CSS, Chart.js posture score gauges, Lucide icons, JetBrains Mono font, and smooth Light/Dark mode toggling.
 - 📝 **Structured Markdown Reports**: Exports clean, GitHub-flavored Markdown audit summaries (`-md report.md`) ideal for PR comments, wikis, and documentation.
 - 📊 **Automated JSON Export & CI/CD Gating**: Supports automated JSON output (`-o report.json`), stdout streaming (`-json-stdout`), quiet mode (`-q`), and risk threshold gating (`-fail-on-risk`) for automated pipelines.
+- ⚡ **Concurrent Batch Worker Pool**: Scans target lists concurrently (`-f`, `-c`) with configurable timeouts and custom User-Agent headers.
 
 ## 🛠️ Installation & Setup
 
