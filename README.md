@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-3371E3?style=flat-square&logo=fedora&logoColor=white)
 [![Build Status](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml/badge.svg)](https://github.com/cymriccc/sec-scan/actions/workflows/security-scan.yml)
 
-> A lightweight, modular security auditing CLI written in Go to evaluate web application header configurations, SSL/TLS certificates, CORS misconfigurations, cookie security flags, tech stack disclosures, and sensitive endpoint exposures.
+> A lightweight, modular security auditing CLI written in Go to evaluate web application header configurations, SSL/TLS certificates, CORS misconfigurations, cookie security flags, DNS SPF/DMARC records, tech stack disclosures, and sensitive endpoint exposures.
 
 ## 📸 Preview
 
@@ -51,6 +51,11 @@
 
 [SAFE] Set-Cookie Headers         : No insecure cookies detected
 
+[+] Auditing DNS & Email Security Records...
+
+[PASS] SPF Record                 : v=spf1 include:_spf.vercel.com -all
+[FAIL] DMARC Record               : MISSING (Recommended: v=DMARC1; p=reject;)
+
 [+] Security Posture Summary:
   Overall Score  : 75 / 100
   Security Grade : C
@@ -59,22 +64,36 @@
 ## ✨ Features
 
 - 🔐 **HTTP Security Header Audit**: Probes target URLs for missing foundational defenses (`HSTS`, `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
+
 - 📜 **SSL/TLS Certificate Inspector**: Evaluates certificate validity, expiration countdowns, issuer authority, and active TLS protocol versions (`TLS 1.3`).
+
 - 🌐 **CORS Security Auditor**: Detects wildcards (`*`) and dangerous arbitrary origin reflection with credentials enabled.
+
 - 🍪 **Cookie Security Auditor**: Inspects `Set-Cookie` headers for missing `Secure`, `HttpOnly`, and `SameSite` attributes to mitigate session hijacking and CSRF.
+
+- 📡 **DNS & Email Security Auditor**: Queries `SPF` and `DMARC` TXT records to detect missing email spoofing and phishing protections.
+
 - 🕵️ **Server Technology Disclosure Detection**: Flags verbose server headers (`Server`, `X-Powered-By`, `X-AspNet-Version`, `Via`) exposing backend stack details.
+
 - 🎯 **Sensitive Endpoint & Asset Probing**: Audits common leak paths like environment files (`.env`), Git internal configurations (`.git/HEAD`), config files, and admin portals.
+
 - 🎨 **Modern Interactive HTML Dashboard**: Generates visual security reports featuring Tailwind CSS, Chart.js posture score gauges, Lucide icons, JetBrains Mono font, and smooth Light/Dark mode toggling.
+
 - 📝 **Structured Markdown Reports**: Exports clean, GitHub-flavored Markdown audit summaries (`-md report.md`) ideal for PR comments, wikis, and documentation.
+
 - 📊 **Automated JSON Export & CI/CD Gating**: Supports automated JSON output (`-o report.json`), stdout streaming (`-json-stdout`), quiet mode (`-q`), and risk threshold gating (`-fail-on-risk`) for automated pipelines.
+
 - ⚡ **Concurrent Batch Worker Pool**: Scans target lists concurrently (`-f`, `-c`) with configurable timeouts and custom User-Agent headers.
+
 
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
 
 - [Go 1.22+](https://golang.org/dl/)
+
 - Git
+
 
 ### Build from Source
 
@@ -178,6 +197,8 @@ sec-scan/
 │   │   ├── cors.go          # CORS Misconfiguration Auditor
 │   │   ├── cookies.go       # Set-Cookie Security Auditor
 │   │   ├── cookies_test.go  # Cookie Auditor Unit Tests
+│   │   ├── dns.go           # DNS SPF & DMARC Record Auditor
+│   │   ├── dns_test.go      # DNS Auditor Unit Tests
 │   │   ├── info.go          # Technology Leak Detector
 │   │   ├── probes.go        # Sensitive Endpoint & Asset Probe
 │   │   ├── remediation.go   # Security Fix & Remediation Guides
