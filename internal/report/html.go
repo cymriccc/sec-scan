@@ -8,8 +8,8 @@ import (
 	"github.com/cymriccc/sec-scan/internal/scanner"
 )
 
-func SaveHTMLReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult, cookies []scanner.CookieFinding) error {
-	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes, corsRes, cookies)
+func SaveHTMLReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult, cookies []scanner.CookieFinding, dnsRes *scanner.DNSCheckResult) error {
+	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes, corsRes, cookies, dnsRes)
 
 	// Determine grade badge colors
 	gradeColor := "from-emerald-500 to-teal-600 shadow-emerald-500/20"
@@ -136,6 +136,42 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
 		<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border mb-2 %s">%s</span>
 		<p class="text-slate-700 dark:text-slate-300 text-sm mt-1 font-medium">%s</p>
 	</div>`, corsStatusClass, corsBadge, corsRes.Details)
+
+    // Build DNS Section
+	dnsHTML := `<div class="text-slate-400 text-sm italic">No DNS record information recorded.</div>`
+	if dnsRes != nil {
+		spfBadge := `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> MISSING</span>`
+		spfVal := `<span class="text-amber-600 dark:text-amber-400 text-xs italic">Recommended: v=spf1 -all</span>`
+		if dnsRes.HasSPF {
+			spfBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> PASS</span>`
+			spfVal = fmt.Sprintf(`<span class="font-mono text-xs text-slate-700 dark:text-slate-300 break-all">%s</span>`, dnsRes.SPFRecord)
+		}
+
+		dmarcBadge := `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> MISSING</span>`
+		dmarcVal := `<span class="text-amber-600 dark:text-amber-400 text-xs italic">Recommended: v=DMARC1; p=reject;</span>`
+		if dnsRes.HasDMARC {
+			dmarcBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> PASS</span>`
+			dmarcVal = fmt.Sprintf(`<span class="font-mono text-xs text-slate-700 dark:text-slate-300 break-all">%s</span>`, dnsRes.DMARCRecord)
+		}
+
+		dnsHTML = fmt.Sprintf(`
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="bg-slate-100/70 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+				<div class="flex items-center justify-between">
+					<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">SPF Record</span>
+					%s
+				</div>
+				<div>%s</div>
+			</div>
+			<div class="bg-slate-100/70 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+				<div class="flex items-center justify-between">
+					<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">DMARC Record</span>
+					%s
+				</div>
+				<div>%s</div>
+			</div>
+		</div>`, spfBadge, spfVal, dmarcBadge, dmarcVal)
+	}
 
 	htmlContent := fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en" class="dark">
@@ -346,6 +382,15 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
                 </table>
             </div>
         </section>
+
+        <!-- DNS & Email Security Section -->
+        <section class="bg-white/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 glass shadow-sm dark:shadow-xl space-y-4">
+            <div class="flex items-center gap-2 text-sky-500 dark:text-sky-400 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <i data-lucide="mail-check" class="w-5 h-5"></i>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">DNS & Email Security Records</h3>
+            </div>
+            %s
+        </section>
     </main>
 
     <footer class="max-w-6xl mx-auto px-6 mt-12 text-center text-xs text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-6">
@@ -429,6 +474,7 @@ func SaveHTMLReport(filename string, target string, headers []scanner.HeaderChec
 		infoHTML,
 		probesHTML,
 		cookiesHTML,
+		dnsHTML,
 		risk.TotalScore,
 	)
 

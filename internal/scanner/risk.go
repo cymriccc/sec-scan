@@ -8,7 +8,7 @@ type RiskAssessment struct {
 }
 
 // EvaluateRisk calculates a score from 0-100 and flags critical pipeline failures
-func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoLeakResult, endpoints []EndpointCheckResult, cors CORSResult, cookies []CookieFinding) RiskAssessment {
+func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoLeakResult, endpoints []EndpointCheckResult, cors CORSResult, cookies []CookieFinding, dns *DNSCheckResult) RiskAssessment {
 	score := 100
 	var issues []string
 	critical := false
@@ -78,6 +78,18 @@ func EvaluateRisk(headers []HeaderCheckResult, tls *TLSCheckResult, info []InfoL
 			score -= 2
 		}
 		issues = append(issues, "Cookie ("+c.CookieName+"): "+c.Issue)
+	}
+
+	// 7. DNS & Email Security Penalties
+	if dns != nil {
+		if !dns.HasSPF {
+			score -= 5
+			issues = append(issues, "Missing SPF Record")
+		}
+		if !dns.HasDMARC {
+			score -= 5
+			issues = append(issues, "Missing DMARC Record")
+		}
 	}
 
 	if score < 0 {

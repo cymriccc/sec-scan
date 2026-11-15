@@ -89,6 +89,27 @@ func PrintCookieReport(cookieResults []CookieFinding) {
 	}
 }
 
+// PrintDNSReport outputs SPF and DMARC record status
+func PrintDNSReport(dns *DNSCheckResult) {
+	fmt.Printf("\n%s[+] Auditing DNS & Email Security Records...%s\n\n", ColorCyan, ColorReset)
+	if dns == nil {
+		fmt.Printf("%s[-] DNS Check: No records found%s\n", ColorRed, ColorReset)
+		return
+	}
+
+	if dns.HasSPF {
+		fmt.Printf("%s[PASS]%s SPF Record                  : %s\n", ColorGreen, ColorReset, dns.SPFRecord)
+	} else {
+		fmt.Printf("%s[FAIL]%s SPF Record                  : MISSING (Recommended: v=spf1 -all)\n", ColorRed, ColorReset)
+	}
+
+	if dns.HasDMARC {
+		fmt.Printf("%s[PASS]%s DMARC Record                : %s\n", ColorGreen, ColorReset, dns.DMARCRecord)
+	} else {
+		fmt.Printf("%s[FAIL]%s DMARC Record                : MISSING (Recommended: v=DMARC1; p=reject;)\n", ColorRed, ColorReset)
+	}
+}
+
 // PrintSummary outputs the overall posture score and grade
 func PrintSummary(risk RiskAssessment) {
 	fmt.Printf("\n%s[+] Security Posture Summary:%s\n", ColorCyan, ColorReset)

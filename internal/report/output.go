@@ -17,9 +17,10 @@ type FullScanReport struct {
 	InfoResults   []scanner.InfoLeakResult      `json:"info_disclosure_results"`
 	ProbesResults []scanner.EndpointCheckResult `json:"endpoint_probe_results"`
 	CookieResults []scanner.CookieFinding       `json:"cookie_results,omitempty"`
+	DNSResult     *scanner.DNSCheckResult       `json:"dns_result,omitempty"`
 }
 
-func SaveFullJSON(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult, cookies []scanner.CookieFinding) error {
+func SaveFullJSON(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult, cookies []scanner.CookieFinding, dnsRes *scanner.DNSCheckResult) error {
 	rep := FullScanReport{
 		Target:        target,
 		ScanTime:      time.Now().Format(time.RFC3339),
@@ -29,6 +30,7 @@ func SaveFullJSON(filename string, target string, headers []scanner.HeaderCheckR
 		InfoResults:   info,
 		ProbesResults: probes,
 		CookieResults: cookies,
+		DNSResult:     dnsRes,
 	}
 
 	data, err := json.MarshalIndent(rep, "", "  ")

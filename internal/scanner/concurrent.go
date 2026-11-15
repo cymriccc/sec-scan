@@ -16,6 +16,7 @@ type BatchTargetResult struct {
 	Endpoints []EndpointCheckResult `json:"endpoints,omitempty"`
 	CORS      CORSResult            `json:"cors,omitempty"`
 	Cookies   []CookieFinding       `json:"cookies,omitempty"`
+	DNS       *DNSCheckResult       `json:"dns,omitempty"`
 	Error     string                `json:"error,omitempty"`
 }
 
@@ -74,6 +75,9 @@ func RunConcurrentScan(targets []string, concurrency int) []BatchTargetResult {
 
 				cookieRes, _ := AuditCookies(target, "sec-scan/1.0", 10*time.Second)
 				res.Cookies = cookieRes
+
+				dnsRes, _ := AuditDNS(target)
+				res.DNS = dnsRes
 
 				resultChan <- res
 			}

@@ -57,7 +57,7 @@ func main() {
 					fmt.Printf("%s[FAIL]%s %-30s : Error (%s)\n", ColorRed, ColorReset, res.Target, res.Error)
 				}
 			} else {
-				risk := scanner.EvaluateRisk(res.Headers, res.TLS, res.InfoLeaks, res.Endpoints, res.CORS, res.Cookies)
+				risk := scanner.EvaluateRisk(res.Headers, res.TLS, res.InfoLeaks, res.Endpoints, res.CORS, res.Cookies, res.DNS)
 				if risk.IsCritical {
 					hasCritical = true
 				}
@@ -105,12 +105,15 @@ func main() {
 	// 6. Cookie Security Audit
 	cookieResults, _ := scanner.AuditCookies(target, *userAgent, timeout)
 
+	// 7. DNS & Email Security Audit
+	dnsResult, _ := scanner.AuditDNS(target)
+
 	// Summary & Risk Evaluation
-	risk := scanner.EvaluateRisk(headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults)
+	risk := scanner.EvaluateRisk(headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults, dnsResult)
 
 	// Handle JSON stdout piping if requested
 	if *stdoutFlag {
-		_ = report.SaveFullJSON("/dev/stdout", target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults)
+		_ = report.SaveFullJSON("/dev/stdout", target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults, dnsResult)
 		return
 	}
 
@@ -122,16 +125,17 @@ func main() {
 		scanner.PrintInfoLeaksReport(infoResults)
 		scanner.PrintEndpointsReport(endpointResults)
 		scanner.PrintCookieReport(cookieResults)
+		scanner.PrintDNSReport(dnsResult)
 		scanner.PrintSummary(risk)
 	}
 
 	// File Exports
 	if *outputFile != "" {
-		_ = report.SaveFullJSON(*outputFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults)
+		_ = report.SaveFullJSON(*outputFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults, dnsResult)
 	}
 
 	if *htmlFile != "" {
-		err := report.SaveHTMLReport(*htmlFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults)
+		err := report.SaveHTMLReport(*htmlFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults, dnsResult)
 		if err != nil && !*quietFlag {
 			fmt.Printf("\n%s[-] Failed to write HTML report: %v%s\n", ColorRed, err, ColorReset)
 		} else if !*quietFlag {
@@ -140,7 +144,7 @@ func main() {
 	}
 
 	if *mdFile != "" {
-		err := report.SaveMarkdownReport(*mdFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults)
+		err := report.SaveMarkdownReport(*mdFile, target, headerResults, tlsResult, infoResults, endpointResults, corsResult, cookieResults, dnsResult)
 		if err != nil && !*quietFlag {
 			fmt.Printf("\n%s[-] Failed to write Markdown report: %v%s\n", ColorRed, err, ColorReset)
 		} else if !*quietFlag {

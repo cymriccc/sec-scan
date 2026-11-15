@@ -14,6 +14,29 @@ type DNSCheckResult struct {
 	DMARCRecord string `json:"dmarc_record,omitempty"`
 }
 
+// EvaluateDNSRecords evaluates TXT records for SPF and DMARC configurations.
+func EvaluateDNSRecords(domain string, rootTXT []string, dmarcTXT []string) *DNSCheckResult {
+	res := &DNSCheckResult{Domain: domain}
+
+	for _, txt := range rootTXT {
+		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(txt)), "v=spf1") {
+			res.HasSPF = true
+			res.SPFRecord = txt
+			break
+		}
+	}
+
+	for _, txt := range dmarcTXT {
+		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(txt)), "v=dmarc1") {
+			res.HasDMARC = true
+			res.DMARCRecord = txt
+			break
+		}
+	}
+
+	return res
+}
+
 // AuditDNS checks the target domain for SPF and DMARC TXT records.
 func AuditDNS(targetURL string) (*DNSCheckResult, error) {
 	parsed, err := url.Parse(targetURL)
@@ -26,31 +49,11 @@ func AuditDNS(targetURL string) (*DNSCheckResult, error) {
 		host = targetURL
 	}
 
-	res := &DNSCheckResult{Domain: host}
-
 	// 1. Check SPF record on root domain
-	txtRecords, err := net.LookupTXT(host)
-	if err == nil {
-		for _, txt := range txtRecords {
-			if strings.HasPrefix(strings.ToLower(strings.TrimSpace(txt)), "v=spf1") {
-				res.HasSPF = true
-				res.SPFRecord = txt
-				break
-			}
-		}
-	}
+	txtRecords, _ := net.LookupTXT(host)
 
 	// 2. Check DMARC record on _dmarc.<domain>
-	dmarcRecords, err := net.LookupTXT("_dmarc." + host)
-	if err == nil {
-		for _, txt := range dmarcRecords {
-			if strings.HasPrefix(strings.ToLower(strings.TrimSpace(txt)), "v=dmarc1") {
-				res.HasDMARC = true
-				res.DMARCRecord = txt
-				break
-			}
-		}
-	}
+	dmarcRecords, _ := net.LookupTXT("_dmarc." + host)
 
-	return res, nil
+	return EvaluateDNSRecords(host, txtRecords, dmarcRecords), nil
 }

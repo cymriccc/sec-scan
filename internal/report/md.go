@@ -9,8 +9,8 @@ import (
 )
 
 // SaveMarkdownReport exports the audit findings into a structured Markdown document.
-func SaveMarkdownReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult, cookies []scanner.CookieFinding) error {
-	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes, corsRes, cookies)
+func SaveMarkdownReport(filename string, target string, headers []scanner.HeaderCheckResult, tlsRes *scanner.TLSCheckResult, info []scanner.InfoLeakResult, probes []scanner.EndpointCheckResult, corsRes scanner.CORSResult, cookies []scanner.CookieFinding, dnsRes *scanner.DNSCheckResult) error {
+	risk := scanner.EvaluateRisk(headers, tlsRes, info, probes, corsRes, cookies, dnsRes)
 
 	content := "# 🛡️ sec-scan Security Audit Report\n\n"
 	content += fmt.Sprintf("- **Target:** `%s`  \n", target)
@@ -103,6 +103,24 @@ func SaveMarkdownReport(filename string, target string, headers []scanner.Header
 			content += fmt.Sprintf("| **`%s`** | %s | %s | %s |\n", c.CookieName, sev, c.Issue, c.Advice)
 		}
 		content += "\n"
+	}
+
+	// DNS & Email Security Section
+	content += "## 📡 DNS & Email Security Records\n\n"
+	if dnsRes != nil {
+		spfStatus := "❌ MISSING (`Recommended: v=spf1 -all`)"
+		if dnsRes.HasSPF {
+			spfStatus = fmt.Sprintf("✅ PASS (`%s`)", dnsRes.SPFRecord)
+		}
+		dmarcStatus := "❌ MISSING (`Recommended: v=DMARC1; p=reject;`)"
+		if dnsRes.HasDMARC {
+			dmarcStatus = fmt.Sprintf("✅ PASS (`%s`)", dnsRes.DMARCRecord)
+		}
+		content += fmt.Sprintf("- **Domain:** `%s`  \n", dnsRes.Domain)
+		content += fmt.Sprintf("- **SPF Record:** %s  \n", spfStatus)
+		content += fmt.Sprintf("- **DMARC Record:** %s  \n\n", dmarcStatus)
+	} else {
+		content += "_No DNS records recorded._\n\n"
 	}
 
 	content += "---\n"
