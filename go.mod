@@ -1,3 +1,3 @@
 module github.com/cymriccc/sec-scan
 
-go 1.27.3
+go 1.22
