@@ -5,6 +5,7 @@
 *.so
 *.dylib
 /sec-scan
+bin/
 
 # Output reports
 *.json
