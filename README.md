@@ -94,6 +94,8 @@
 
 - Git
 
+- Make *(optional, for automated builds on Linux / macOS)*
+
 
 ### Build from Source
 
@@ -102,7 +104,13 @@
 git clone https://github.com/cymriccc/sec-scan.git
 cd sec-scan
 
-# Build the executable
+# Build using Make (outputs to ./bin/sec-scan)
+make build
+
+# Optional: Install globally to /usr/local/bin/sec-scan (Linux / macOS)
+make install
+
+# Manual build (Windows / without Make)
 go build -o sec-scan.exe ./cmd/sec-scan
 ```
 
@@ -112,11 +120,14 @@ go build -o sec-scan.exe ./cmd/sec-scan
 Pass the target URL directly as a positional argument:
 
 ```bash
+# Linux / macOS (built via Make)
+./bin/sec-scan https://target-website.com
+
+# Linux / macOS (installed globally via make install)
+sec-scan https://target-website.com
+
 # Windows PowerShell / CMD
 .\sec-scan.exe https://target-website.com
-
-# Linux / macOS
-./sec-scan https://target-website.com
 
 # Go Run (Development)
 go run cmd/sec-scan/main.go https://target-website.com
@@ -210,8 +221,12 @@ sec-scan/
 │       ├── html.go          # Interactive Glassmorphism HTML Generator
 │       └── md.go            # Structured Markdown Exporter
 ├── .gitignore
-├── go.mod
-└── README.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── Makefile
+├── README.md
+├── SECURITY.md
+└── go.mod
 ```
 
 ## 📝 License
