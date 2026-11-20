@@ -2,16 +2,20 @@
 
 ## Supported Versions
 
+Only the latest release and `main` branch of `sec-scan` receive active security updates and patches.
+
 | Version | Supported |
 | :--- | :--- |
-| `main` (latest) | :white_check_mark: |
+| `main` / Latest Release | Yes |
+| Older Commits | No |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in `sec-scan`, please report it responsibly:
+Please do **not** open public GitHub issues for suspected security vulnerabilities, command injection vectors, or parser bypasses.
 
-1. **Do not** open a public GitHub issue.
-2. Use GitHub Private Vulnerability Reporting under the **Security** tab, or reach out directly to [@cymriccc](https://github.com/cymriccc).
-3. Include steps to reproduce and potential impact.
-   
-You will receive an acknowledgment within 48 hours.
+Instead, report vulnerabilities privately through **GitHub Security Advisories** ("Report a vulnerability" under the **Security** tab of `cymriccc/sec-scan`) with:
+- A clear description of the vulnerability and potential impact.
+- The exact CLI flags or target response payload required to reproduce the issue.
+- Your Go version and operating system details.
+
+Reports are acknowledged within 48 hours, with coordinated fixes prioritized ahead of public disclosure.
