@@ -229,6 +229,12 @@ sec-scan/
 └── go.mod
 ```
 
+## 🗺️ Roadmap
+
+- [ ] **Subdomain Takeover Auditor**: Detect dangling `CNAME` records pointing to unclaimed cloud services (GitHub Pages, Vercel, Netlify, AWS S3, Heroku).
+- [ ] **Risk Engine Unit Tests**: Expand `internal/scanner/risk_test.go` coverage for grade boundaries and edge-case deductions.
+- [ ] **HTTP/3 & QUIC Detection**: Identify `Alt-Svc` HTTP/3 advertisements during header and TLS inspection.
+
 ## 📝 License
 
 Distributed under the MIT License. See `LICENSE` for details.
